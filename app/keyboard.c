@@ -2,6 +2,7 @@
 #include "fifo.h"
 #include "keyboard.h"
 #include "reg.h"
+#include "pi.h"
 
 #include <pico/stdlib.h>
 
@@ -36,6 +37,12 @@ static const uint8_t col_pins[NUM_OF_COLS] =
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wmissing-field-initializers"
 
+/*
+
+In https://github.com/wallComputer/bbqX0kbd_driver/blob/main/source/mod_src/bbq20kbd_pmod_codes.h
+'f' is apped to KEY_ESC
+
+*/
 static const struct entry kbd_entries[][NUM_OF_COLS] =
 {
 	{ { KEY_JOY_CENTER },  { 'W', '1' },              { 'G', '/' },              { 'S', '4' },              { 'L', '"'  },  { 'H' , ':' } },
@@ -44,7 +51,7 @@ static const struct entry kbd_entries[][NUM_OF_COLS] =
 	{ { },                 { ' ', '\t' },             { 'C', '9' },              { 'Z', '7' },              { 'M', '.'  },  { 'N', ','  } },
 	{ { KEY_BTN_LEFT2 },   { .mod = KEY_MOD_ID_SYM }, { 'T', '(' },              { 'D', '5' },              { 'I', '-'  },  { 'Y', ')'  } },
 	{ { KEY_BTN_RIGHT1 },  { .mod = KEY_MOD_ID_ALT }, { 'V', '?' },              { 'X', '8' },              { '$', '`'  },  { 'B', '!'  } },
-	{ { },                 { 'A', '*' },              { .mod = KEY_MOD_ID_SHR }, { 'P', '@' },              { '\b' },       { '\n', '|' } },
+	{ { },                 { 'A', '*' },              { .mod = KEY_MOD_ID_SHR }, { 'P', '@' },              { '\b', 'f' },       { '\n', '|' } },
 };
 
 #if NUM_OF_BTNS > 0
@@ -76,6 +83,17 @@ static struct
 	bool numlock_changed;
 	bool numlock;
 } self;
+
+static int64_t rk(alarm_id_t id, void *user_data)
+{
+	(void)id;
+
+	const int data = (int)user_data;
+
+	keyboard_inject_event((char)data, KEY_STATE_RELEASED);
+
+	return 0;
+}
 
 static void transition_to(struct list_item * const p_item, const enum key_state next_state)
 {
@@ -193,9 +211,24 @@ static void next_item_state(struct list_item * const p_item, const bool pressed)
 			break;
 
 		case KEY_STATE_HOLD:
+			if (!pressed) {
+				transition_to(p_item, KEY_STATE_RELEASED);
+			} else if ((to_ms_since_boot(get_absolute_time()) - p_item->hold_start_time) > LONG_HOLD_MS) {
+				if(p_item->effective_key == KEY_BTN_RIGHT2){
+					//inject power key
+					char key = KEY_POWER;
+					keyboard_inject_event(key, KEY_STATE_PRESSED);
+					//delay release key
+					add_alarm_in_ms(10, rk, (void*)(int)key, true);
+				}
+				transition_to(p_item, KEY_STATE_LONG_HOLD);
+			}
+			break;
+
+		case KEY_STATE_LONG_HOLD:
 			if (!pressed)
 				transition_to(p_item, KEY_STATE_RELEASED);
-			break;
+			break;			
 
 		case KEY_STATE_RELEASED:
 		{
@@ -325,7 +358,7 @@ bool keyboard_is_key_down(char key)
 		if (item->p_entry == NULL)
 			continue;
 
-		if ((item->state != KEY_STATE_PRESSED) && (item->state != KEY_STATE_HOLD))
+		if ((item->state != KEY_STATE_PRESSED) && (item->state != KEY_STATE_HOLD) && (item->state != KEY_STATE_LONG_HOLD))
 			continue;
 
 		if (item->effective_key != key)
