@@ -9,6 +9,7 @@ enum key_state
 	KEY_STATE_PRESSED,
 	KEY_STATE_HOLD,
 	KEY_STATE_RELEASED,
+	KEY_STATE_LONG_HOLD,
 };
 
 enum key_mod
@@ -40,6 +41,9 @@ enum key_mod
 #define KEY_MOD_SHL		0x1B // Left Shift
 #define KEY_MOD_SHR		0x1C // Right Shift
 #define KEY_MOD_SYM		0x1D
+
+#define KEY_POWER       0xEE
+#define LONG_HOLD_MS    3000
 
 struct key_callback
 {

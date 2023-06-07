@@ -11,6 +11,7 @@ add_executable(i2c_puppet
 	touchpad.c
 	usb.c
 	usb_descriptors.c
+	pi.c
 )
 
 add_compile_options(-Wall -Wextra -Wpedantic)
