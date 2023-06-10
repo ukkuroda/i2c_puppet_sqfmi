@@ -27,6 +27,12 @@ enum reg_id
 	REG_ID_CF2 = 0x14, // config 2
 	REG_ID_TOX = 0x15, // touch delta x since last read, at most (-128 to 127)
 	REG_ID_TOY = 0x16, // touch delta y since last read, at most (-128 to 127)
+	
+	REG_ID_ADC = 0x17,
+	REG_ID_LED    = 0x20,
+	REG_ID_LED_R  = 0x21,
+	REG_ID_LED_G  = 0x22,
+	REG_ID_LED_B  = 0x23,
 
 	REG_ID_LAST,
 };
