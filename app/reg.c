@@ -7,6 +7,8 @@
 #include "puppet_i2c.h"
 #include "keyboard.h"
 #include "touchpad.h"
+#include "pi.h"
+#include "hardware/adc.h"
 
 #include <pico/stdlib.h>
 #include <RP2040.h> // TODO: When there's more than one RP chip, change this to be more generic
@@ -35,6 +37,7 @@ void reg_process_packet(uint8_t in_reg, uint8_t in_data, uint8_t *out_buffer, ui
 {
 	const bool is_write = (in_reg & PACKET_WRITE_MASK);
 	const uint8_t reg = (in_reg & ~PACKET_WRITE_MASK);
+	uint16_t adc_value;
 
 //	printf("read complete, is_write: %d, reg: 0x%02X\r\n", is_write, reg);
 
@@ -114,6 +117,33 @@ void reg_process_packet(uint8_t in_reg, uint8_t in_data, uint8_t *out_buffer, ui
 		break;
 	}
 
+	// RGB LED registers
+	case REG_ID_LED_R:
+	case REG_ID_LED_G:
+	case REG_ID_LED_B:
+	{
+		if (is_write) {
+			reg_set_value(reg, in_data);
+			led_sync();
+		} else {
+			out_buffer[0] = reg_get_value(reg);
+			*out_len = sizeof(uint8_t);
+		}
+		break;
+	}
+
+	case REG_ID_LED: // gpio value
+	{
+		if (is_write) {
+			reg_set_value(reg, in_data);
+			led_sync();
+		} else {
+			out_buffer[0] = reg_get_value(reg);
+			*out_len = sizeof(uint8_t);
+		}
+		break;
+	}
+
 	// read-only registers
 	case REG_ID_TOX:
 	case REG_ID_TOY:
@@ -127,6 +157,13 @@ void reg_process_packet(uint8_t in_reg, uint8_t in_data, uint8_t *out_buffer, ui
 		out_buffer[0] = VER_VAL;
 		*out_len = sizeof(uint8_t);
 		break;
+
+	case REG_ID_ADC:
+		adc_value = adc_read();
+		out_buffer[0] = (uint8_t)(adc_value & 0x00FF);
+		out_buffer[1] = (uint8_t)((adc_value & 0xFF00) >> 8);
+		*out_len = sizeof(uint8_t) * 2;
+		break;		
 
 	case REG_ID_KEY:
 		out_buffer[0] = fifo_count();

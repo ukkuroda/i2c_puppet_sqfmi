@@ -22,6 +22,7 @@ target_link_libraries(i2c_puppet
 	cmsis_core
 	hardware_i2c
 	hardware_pwm
+	hardware_adc
 	pico_bootsel_via_double_reset
 	pico_stdlib
 	tinyusb_device

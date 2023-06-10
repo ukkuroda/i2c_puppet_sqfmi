@@ -1,4 +1,4 @@
-# I2C Puppet
+# Beepberry for of I2C Puppet
 
 This is a port of the old [BB Q10 Keyboard-to-I2C Software](https://github.com/solderparty/bbq10kbd_i2c_sw) to the RP2040, expanded with new features, while still staying backwards compatible.
 
@@ -26,7 +26,7 @@ See the `boards` directory for a list of available boards.
 
     mkdir build
     cd build
-    cmake -DPICO_BOARD=bbq20kbd_breakout -DCMAKE_BUILD_TYPE=Debug ..
+    cmake -DPICO_BOARD=beepberry -DCMAKE_BUILD_TYPE=Debug ..
     make
 
 ## Vendor USB Class
@@ -304,6 +304,20 @@ The value reported is signed and can be in the range of (-128 to 127).
 When the value of this register is read, it is afterwards reset back to 0.
 
 It is recommended to read the value of this register often, or data loss might occur.
+
+Default value: 0
+
+### LED RGB values (REG_LED_R = 0x21, REG_LED_G = 0x22, REG_LED_B = 0x23)
+
+These registers can be read and written to, each are 1 byte in size.
+
+Set the red/green/blue values between 0-255 `0x00 - 0xFF`
+
+### LED On/Off (REG_LED = 0x20)
+
+This register can be read and written to, it is 1 byte in size.
+
+`0x00` is off, any other value is on
 
 Default value: 0
 
