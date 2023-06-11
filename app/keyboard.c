@@ -4,8 +4,6 @@
 #include "reg.h"
 #include "pi.h"
 
-#include "input-event-codes.h"
-
 #include <pico/stdlib.h>
 
 #define LIST_SIZE	10 // size of the list keeping track of all the pressed keys
@@ -120,44 +118,6 @@ static void transition_to(struct list_item * const p_item, const enum key_state 
 
 	if (p_item->effective_key == '\0') {
 		char key = p_entry->chr;
-		switch (p_entry->mod) {
-			case KEY_MOD_ID_ALT:
-				if (reg_is_bit_set(REG_ID_CFG, CFG_REPORT_MODS))
-					key = KEY_MOD_ALT;
-				break;
-
-			case KEY_MOD_ID_SHL:
-				if (reg_is_bit_set(REG_ID_CFG, CFG_REPORT_MODS))
-					key = KEY_MOD_SHL;
-				break;
-
-			case KEY_MOD_ID_SHR:
-				if (reg_is_bit_set(REG_ID_CFG, CFG_REPORT_MODS))
-					key = KEY_MOD_SHR;
-				break;
-
-			case KEY_MOD_ID_SYM:
-				if (reg_is_bit_set(REG_ID_CFG, CFG_REPORT_MODS))
-					key = KEY_MOD_SYM;
-				break;
-
-			default:
-			{
-				if (false && reg_is_bit_set(REG_ID_CFG, CFG_USE_MODS)) {
-					const bool shift = (self.mods[KEY_MOD_ID_SHL] || self.mods[KEY_MOD_ID_SHR]) | self.capslock;
-					const bool alt = self.mods[KEY_MOD_ID_ALT] | self.numlock;
-					const bool is_button = (key <= KEY_BTN_RIGHT1) || ((key >= KEY_BTN_LEFT2) && (key <= KEY_BTN_RIGHT2));
-
-					if (alt && !is_button) {
-						key = p_entry->alt;
-					} else if (!shift && (key >= 'A' && key <= 'Z')) {
-						key = (key + ' ');
-					}
-				}
-
-				break;
-			}
-		}
 
 		p_item->effective_key = key;
 	}
@@ -228,9 +188,9 @@ static void next_item_state(struct list_item * const p_item, const bool pressed)
 			if (!pressed) {
 				transition_to(p_item, KEY_STATE_RELEASED);
 			} else if ((to_ms_since_boot(get_absolute_time()) - p_item->hold_start_time) > LONG_HOLD_MS) {
-				if(p_item->effective_key == KEY_BTN_RIGHT2){
+				if(p_item->effective_key == KEY_STOP){
 					//inject power key
-					char key = KEY_POWER;
+					char key = KEY_STOP;
 					keyboard_inject_event(key, KEY_STATE_PRESSED);
 					//delay release key
 					add_alarm_in_ms(10, rk, (void*)(int)key, true);

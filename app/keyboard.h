@@ -1,5 +1,7 @@
 #pragma once
 
+#include "input-event-codes.h"
+
 #include <stdbool.h>
 #include <stdint.h>
 
@@ -12,37 +14,6 @@ enum key_state
 	KEY_STATE_LONG_HOLD,
 };
 
-enum key_mod
-{
-	KEY_MOD_ID_NONE = 0,
-	KEY_MOD_ID_SYM,
-	KEY_MOD_ID_ALT,
-	KEY_MOD_ID_SHL,
-	KEY_MOD_ID_SHR,
-
-	KEY_MOD_ID_LAST,
-};
-
-#define KEY_JOY_UP		0xf1
-#define KEY_JOY_DOWN	0xf2
-#define KEY_JOY_LEFT	0xf3
-#define KEY_JOY_RIGHT	0xF4
-#define KEY_JOY_CENTER	0xF5
-#define KEY_BTN_LEFT1	0xF6
-#define KEY_BTN_RIGHT1	0xF7
-// 0x08 - BACKSPACE
-// 0x09 - TAB
-// 0x0A - NEW LINE
-// 0x0D - CARRIAGE RETURN
-#define KEY_BTN_LEFT2	0xF1
-#define KEY_BTN_RIGHT2	0xF2
-
-#define KEY_MOD_ALT		0xFA
-#define KEY_MOD_SHL		0xFB // Left Shift
-#define KEY_MOD_SHR		0xFC // Right Shift
-#define KEY_MOD_SYM		0xFD
-
-#define KEY_POWER       0xFE
 #define LONG_HOLD_MS    3000
 
 struct key_callback

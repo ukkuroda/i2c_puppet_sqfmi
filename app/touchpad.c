@@ -89,9 +89,9 @@ void touchpad_gpio_irq(uint gpio, uint32_t events)
 			if (to_ms_since_boot(get_absolute_time()) - self.last_swipe_time > SWIPE_COOLDOWN_TIME_MS) {
 				char key = '\0';
 				if (MOTION_IS_SWIPE(y, x)) {
-					key = (y < 0) ? KEY_JOY_UP : KEY_JOY_DOWN;
+					key = (y < 0) ? KEY_UP : KEY_DOWN;
 				} else if (MOTION_IS_SWIPE(x, y)) {
-					key = (x < 0) ? KEY_JOY_LEFT : KEY_JOY_RIGHT;
+					key = (x < 0) ? KEY_LEFT : KEY_RIGHT;
 				}
 
 				if (key != '\0') {
