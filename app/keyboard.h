@@ -23,26 +23,26 @@ enum key_mod
 	KEY_MOD_ID_LAST,
 };
 
-#define KEY_JOY_UP		0x01
-#define KEY_JOY_DOWN	0x02
-#define KEY_JOY_LEFT	0x03
-#define KEY_JOY_RIGHT	0x04
-#define KEY_JOY_CENTER	0x05
-#define KEY_BTN_LEFT1	0x06
-#define KEY_BTN_RIGHT1	0x07
+#define KEY_JOY_UP		0xf1
+#define KEY_JOY_DOWN	0xf2
+#define KEY_JOY_LEFT	0xf3
+#define KEY_JOY_RIGHT	0xF4
+#define KEY_JOY_CENTER	0xF5
+#define KEY_BTN_LEFT1	0xF6
+#define KEY_BTN_RIGHT1	0xF7
 // 0x08 - BACKSPACE
 // 0x09 - TAB
 // 0x0A - NEW LINE
 // 0x0D - CARRIAGE RETURN
-#define KEY_BTN_LEFT2	0x11
-#define KEY_BTN_RIGHT2	0x12
+#define KEY_BTN_LEFT2	0xF1
+#define KEY_BTN_RIGHT2	0xF2
 
-#define KEY_MOD_ALT		0x1A
-#define KEY_MOD_SHL		0x1B // Left Shift
-#define KEY_MOD_SHR		0x1C // Right Shift
-#define KEY_MOD_SYM		0x1D
+#define KEY_MOD_ALT		0xFA
+#define KEY_MOD_SHL		0xFB // Left Shift
+#define KEY_MOD_SHR		0xFC // Right Shift
+#define KEY_MOD_SYM		0xFD
 
-#define KEY_POWER       0xEE
+#define KEY_POWER       0xFE
 #define LONG_HOLD_MS    3000
 
 struct key_callback

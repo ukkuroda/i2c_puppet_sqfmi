@@ -48,7 +48,7 @@ int main(void)
 	// For now, the `gpio` param is ignored and all enabled GPIOs generate the irq
 	gpio_set_irq_enabled_with_callback(0xFF, 0, true, &gpio_irq);
 
-	pi_init(); //turns on the pi
+	//pi_init(); //turns on the pi
 
 #ifndef NDEBUG
 	printf("Starting main loop\r\n");

@@ -4,6 +4,8 @@
 #include "reg.h"
 #include "pi.h"
 
+#include "input-event-codes.h"
+
 #include <pico/stdlib.h>
 
 #define LIST_SIZE	10 // size of the list keeping track of all the pressed keys
@@ -43,16 +45,28 @@ In https://github.com/wallComputer/bbqX0kbd_driver/blob/main/source/mod_src/bbq2
 'f' is apped to KEY_ESC
 
 */
+#if 0
 static const struct entry kbd_entries[][NUM_OF_COLS] =
 {
-	{ { KEY_JOY_CENTER },  { 'W', '1' },              { 'G', '/' },              { 'S', '4' },              { 'L', '"'  },  { 'H' , ':' } },
+	{ { KEY_COMPOSE },  { 'W', '1' },              { 'G', '/' },              { 'S', '4' },              { 'L', '"'  },  { 'H' , ':' } },
 	{ { },                 { 'Q', '#' },              { 'R', '3' },              { 'E', '2' },              { 'O', '+'  },  { 'U', '_'  } },
-	{ { KEY_BTN_LEFT1 },   { '~', '0' },              { 'F', '6' },              { .mod = KEY_MOD_ID_SHL }, { 'K', '\''  }, { 'J', ';'  } },
+	{ { KEY_OPEN },   { '~', '0' },              { 'F', '6' },              { KEY_LEFTSHIFT }, { 'K', '\''  }, { 'J', ';'  } },
 	{ { },                 { ' ', '\t' },             { 'C', '9' },              { 'Z', '7' },              { 'M', '.'  },  { 'N', ','  } },
-	{ { KEY_BTN_LEFT2 },   { .mod = KEY_MOD_ID_SYM }, { 'T', '(' },              { 'D', '5' },              { 'I', '-'  },  { 'Y', ')'  } },
-	{ { KEY_BTN_RIGHT1 },  { .mod = KEY_MOD_ID_ALT }, { 'V', '?' },              { 'X', '8' },              { '$', '`'  },  { 'B', '!'  } },
-	{ { },                 { 'A', '*' },              { .mod = KEY_MOD_ID_SHR }, { 'P', '@' },              { '\b', 'f' },       { '\n', '|' } },
+	{ { KEY_PROPS },   KEY_LEFTMETA, { 'T', '(' },              { 'D', '5' },              { 'I', '-'  },  { 'Y', ')'  } },
+	{ { KEY_ESC },  KEY_LEFTALT, { 'V', '?' },              { 'X', '8' },              { '$', '`'  },  { 'B', '!'  } },
+	{ { },                 { 'A', '*' },              KEY_RIGHTSHIFT, { 'P', '@' },              { '\b', 'f' },       { '\n', '|' } },
 };
+#else
+static const struct entry kbd_entries[NUM_OF_ROWS][NUM_OF_COLS] = {
+{ {KEY_COMPOSE}, {KEY_W}, {KEY_G}, {KEY_S}, {KEY_L}, {KEY_H} },
+{            {}, {KEY_Q}, {KEY_R}, {KEY_E}, {KEY_O}, {KEY_U} },
+{    {KEY_OPEN}, {KEY_0}, {KEY_F}, {KEY_LEFTSHIFT}, {KEY_K}, {KEY_J} },
+{            {}, {KEY_SPACE}, {KEY_C}, {KEY_Z}, {KEY_M}, {KEY_N} },
+{   {KEY_PROPS}, {KEY_LEFTMETA}, {KEY_T}, {KEY_D}, {KEY_I}, {KEY_Y} },
+{     {KEY_ESC}, {KEY_LEFTALT}, {KEY_V}, {KEY_X}, {KEY_MUTE}, {KEY_B} },
+{            {}, {KEY_A}, {KEY_RIGHTSHIFT}, {KEY_P}, {KEY_BACKSPACE}, {KEY_ENTER} },
+};
+#endif
 
 #if NUM_OF_BTNS > 0
 static const struct entry btn_entries[NUM_OF_BTNS] =
@@ -129,7 +143,7 @@ static void transition_to(struct list_item * const p_item, const enum key_state 
 
 			default:
 			{
-				if (reg_is_bit_set(REG_ID_CFG, CFG_USE_MODS)) {
+				if (false && reg_is_bit_set(REG_ID_CFG, CFG_USE_MODS)) {
 					const bool shift = (self.mods[KEY_MOD_ID_SHL] || self.mods[KEY_MOD_ID_SHR]) | self.capslock;
 					const bool alt = self.mods[KEY_MOD_ID_ALT] | self.numlock;
 					const bool is_button = (key <= KEY_BTN_RIGHT1) || ((key >= KEY_BTN_LEFT2) && (key <= KEY_BTN_RIGHT2));

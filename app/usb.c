@@ -5,6 +5,8 @@
 #include "touchpad.h"
 #include "reg.h"
 
+#include "input-event-codes.h"
+
 #include <hardware/irq.h>
 #include <pico/mutex.h>
 #include <tusb.h>
@@ -47,13 +49,6 @@ static int64_t timer_task(alarm_id_t id, void *user_data)
 
 static void key_cb(char key, enum key_state state)
 {
-	// Don't send mods over USB
-	if ((key == KEY_MOD_SHL) ||
-		(key == KEY_MOD_SHR) ||
-		(key == KEY_MOD_ALT) ||
-		(key == KEY_MOD_SYM))
-		return;
-
 	if (tud_hid_n_ready(USB_ITF_KEYBOARD) && reg_is_bit_set(REG_ID_CF2, CF2_USB_KEYB_ON)) {
 		uint8_t conv_table[128][2]		= { HID_ASCII_TO_KEYCODE };
 		conv_table['\n'][1]				= HID_KEY_ENTER; // Fixup: Enter instead of Return
@@ -66,10 +61,22 @@ static void key_cb(char key, enum key_state state)
 		uint8_t modifier   = 0;
 
 		if (state == KEY_STATE_PRESSED) {
-			if (conv_table[(int)key][0])
-				modifier = KEYBOARD_MODIFIER_LEFTSHIFT;
-
-			keycode[0] = conv_table[(int)key][1];
+			#if 0
+			static char raws[9] = {KEY_OPEN, KEY_PROPS, KEY_COMPOSE, KEY_ESC, KEY_STOP,
+				KEY_LEFTSHIFT, KEY_LEFTALT, KEY_RIGHTSHIFT, KEY_LEFTMETA};
+			bool raw = false;
+			for (int i =0 ;i < 9; i++) {
+				if (key == raws[i]) {
+					raw = true;
+					break;
+				}
+			}
+			keycode[0] = (raw)
+				? key
+				: conv_table[(int)key][1];
+			#else
+			keycode[0] = key;
+			#endif
 		}
 
 		if (state != KEY_STATE_HOLD)
