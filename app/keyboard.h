@@ -24,8 +24,6 @@ struct key_callback
 
 void keyboard_inject_event(char key, enum key_state state);
 
-bool keyboard_is_key_down(char key);
-
 void keyboard_add_key_callback(struct key_callback *callback);
 
 void keyboard_init(void);

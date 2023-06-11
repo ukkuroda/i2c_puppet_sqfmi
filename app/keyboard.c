@@ -11,7 +11,6 @@
 struct entry
 {
 	char chr;
-	char alt;
 };
 
 struct list_item
@@ -19,7 +18,6 @@ struct list_item
 	const struct entry *p_entry;
 	uint32_t hold_start_time;
 	enum key_state state;
-	char effective_key;
 };
 
 static const uint8_t row_pins[NUM_OF_ROWS] =
@@ -102,19 +100,10 @@ static void transition_to(struct list_item * const p_item, const enum key_state 
 
 	p_item->state = next_state;
 
-	if (!p_entry)
+	if (!p_entry || (p_entry->chr == 0))
 		return;
 
-	if (p_item->effective_key == '\0') {
-		char key = p_entry->chr;
-
-		p_item->effective_key = key;
-	}
-
-	if (p_item->effective_key == '\0')
-		return;
-
-	keyboard_inject_event(p_item->effective_key, next_state);
+	keyboard_inject_event(p_item->p_entry->chr, next_state);
 }
 
 static void next_item_state(struct list_item * const p_item, const bool pressed)
@@ -140,7 +129,7 @@ static void next_item_state(struct list_item * const p_item, const bool pressed)
 			if (!pressed) {
 				transition_to(p_item, KEY_STATE_RELEASED);
 			} else if ((to_ms_since_boot(get_absolute_time()) - p_item->hold_start_time) > LONG_HOLD_MS) {
-				if(p_item->effective_key == KEY_STOP){
+				if(p_item->p_entry->chr == KEY_STOP){
 					//inject power key
 					char key = KEY_STOP;
 					keyboard_inject_event(key, KEY_STATE_PRESSED);
@@ -159,7 +148,6 @@ static void next_item_state(struct list_item * const p_item, const bool pressed)
 		case KEY_STATE_RELEASED:
 		{
 			p_item->p_entry = NULL;
-			p_item->effective_key = '\0';
 			transition_to(p_item, KEY_STATE_IDLE);
 			break;
 		}
@@ -202,7 +190,6 @@ static int64_t timer_task(alarm_id_t id, void *user_data)
 					continue;
 
 				self.list[i].p_entry = &((const struct entry*)kbd_entries)[key_idx];
-				self.list[i].effective_key = '\0';
 				self.list[i].state = KEY_STATE_IDLE;
 				next_item_state(&self.list[i], pressed);
 
@@ -241,7 +228,6 @@ static int64_t timer_task(alarm_id_t id, void *user_data)
 				continue;
 
 			self.list[i].p_entry = &((const struct entry*)btn_entries)[b];
-			self.list[i].effective_key = '\0';
 			self.list[i].state = KEY_STATE_IDLE;
 			next_item_state(&self.list[i], pressed);
 
@@ -271,26 +257,6 @@ void keyboard_inject_event(char key, enum key_state state)
 
 		cb = cb->next;
 	}
-}
-
-bool keyboard_is_key_down(char key)
-{
-	for (int32_t i = 0; i < LIST_SIZE; ++i) {
-		struct list_item *item = &self.list[i];
-
-		if (item->p_entry == NULL)
-			continue;
-
-		if ((item->state != KEY_STATE_PRESSED) && (item->state != KEY_STATE_HOLD) && (item->state != KEY_STATE_LONG_HOLD))
-			continue;
-
-		if (item->effective_key != key)
-			continue;
-
-		return true;
-	}
-
-	return false;
 }
 
 void keyboard_add_key_callback(struct key_callback *callback)
