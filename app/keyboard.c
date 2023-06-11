@@ -12,7 +12,6 @@ struct entry
 {
 	char chr;
 	char alt;
-	enum key_mod mod;
 };
 
 struct list_item
@@ -20,7 +19,6 @@ struct list_item
 	const struct entry *p_entry;
 	uint32_t hold_start_time;
 	enum key_state state;
-	bool mods[KEY_MOD_ID_LAST];
 	char effective_key;
 };
 
@@ -82,18 +80,9 @@ static const uint8_t btn_pins[NUM_OF_BTNS] =
 
 static struct
 {
-	struct key_lock_callback *lock_callbacks;
 	struct key_callback *key_callbacks;
 
 	struct list_item list[LIST_SIZE];
-
-	bool mods[KEY_MOD_ID_LAST];
-
-	bool capslock_changed;
-	bool capslock;
-
-	bool numlock_changed;
-	bool numlock;
 } self;
 
 static int64_t rk(alarm_id_t id, void *user_data)
@@ -133,43 +122,6 @@ static void next_item_state(struct list_item * const p_item, const bool pressed)
 	switch (p_item->state) {
 		case KEY_STATE_IDLE:
 			if (pressed) {
-				if (p_item->p_entry->mod != KEY_MOD_ID_NONE)
-					self.mods[p_item->p_entry->mod] = true;
-
-				if (!self.capslock_changed && self.mods[KEY_MOD_ID_SHR] && self.mods[KEY_MOD_ID_ALT]) {
-					self.capslock = true;
-					self.capslock_changed = true;
-				}
-
-				if (!self.numlock_changed && self.mods[KEY_MOD_ID_SHL] && self.mods[KEY_MOD_ID_ALT]) {
-					self.numlock = true;
-					self.numlock_changed = true;
-				}
-
-				if (!self.capslock_changed && (self.mods[KEY_MOD_ID_SHL] || self.mods[KEY_MOD_ID_SHR])) {
-					self.capslock = false;
-					self.capslock_changed = true;
-				}
-
-				if (!self.numlock_changed && (self.mods[KEY_MOD_ID_SHL] || self.mods[KEY_MOD_ID_SHR])) {
-					self.numlock = false;
-					self.numlock_changed = true;
-				}
-
-				if (!self.mods[KEY_MOD_ID_ALT]) {
-					self.capslock_changed = false;
-					self.numlock_changed = false;
-				}
-
-				if (self.lock_callbacks && (self.capslock_changed || self.numlock_changed)) {
-					struct key_lock_callback *cb = self.lock_callbacks;
-					while (cb) {
-						cb->func(self.capslock_changed, self.numlock_changed);
-
-						cb = cb->next;
-					}
-				}
-
 				transition_to(p_item, KEY_STATE_PRESSED);
 
 				p_item->hold_start_time = to_ms_since_boot(get_absolute_time());
@@ -206,9 +158,6 @@ static void next_item_state(struct list_item * const p_item, const bool pressed)
 
 		case KEY_STATE_RELEASED:
 		{
-			if (p_item->p_entry->mod != KEY_MOD_ID_NONE)
-				self.mods[p_item->p_entry->mod] = false;
-
 			p_item->p_entry = NULL;
 			p_item->effective_key = '\0';
 			transition_to(p_item, KEY_STATE_IDLE);
@@ -344,11 +293,6 @@ bool keyboard_is_key_down(char key)
 	return false;
 }
 
-bool keyboard_is_mod_on(enum key_mod mod)
-{
-	return self.mods[mod];
-}
-
 void keyboard_add_key_callback(struct key_callback *callback)
 {
 	// first callback
@@ -365,37 +309,8 @@ void keyboard_add_key_callback(struct key_callback *callback)
 	cb->next = callback;
 }
 
-void keyboard_add_lock_callback(struct key_lock_callback *callback)
-{
-	// first callback
-	if (!self.lock_callbacks) {
-		self.lock_callbacks = callback;
-		return;
-	}
-
-	// find last and insert after
-	struct key_lock_callback *cb = self.lock_callbacks;
-	while (cb->next)
-		cb = cb->next;
-
-	cb->next = callback;
-}
-
-bool keyboard_get_capslock(void)
-{
-	return self.capslock;
-}
-
-bool keyboard_get_numlock(void)
-{
-	return self.numlock;
-}
-
 void keyboard_init(void)
 {
-	for (int i = 0; i < KEY_MOD_ID_LAST; ++i)
-		self.mods[i] = false;
-
 	// rows
 	for (uint32_t i = 0; i < NUM_OF_ROWS; ++i) {
 		gpio_init(row_pins[i]);

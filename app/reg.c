@@ -130,8 +130,6 @@ void reg_process_packet(uint8_t in_reg, uint8_t in_data, uint8_t *out_buffer, ui
 
 	case REG_ID_KEY:
 		out_buffer[0] = fifo_count();
-		out_buffer[0] |= keyboard_get_numlock()  ? KEY_NUMLOCK  : 0x00;
-		out_buffer[0] |= keyboard_get_capslock() ? KEY_CAPSLOCK : 0x00;
 		*out_len = sizeof(uint8_t);
 		break;
 

@@ -21,14 +21,6 @@ static void key_cb(char key, enum key_state state)
 }
 static struct key_callback key_callback = { .func = key_cb };
 
-static void key_lock_cb(bool caps_changed, bool num_changed)
-{
-	printf("lock, caps_c: %d, caps: %d, num_c: %d, num: %d\r\n",
-		   caps_changed, keyboard_get_capslock(),
-		   num_changed, keyboard_get_numlock());
-}
-static struct key_lock_callback key_lock_callback ={ .func = key_lock_cb };
-
 static void touch_cb(int8_t x, int8_t y)
 {
 	printf("%s: x: %d, y: %d !\r\n", __func__, x, y);
@@ -98,7 +90,6 @@ void debug_init(void)
 	printf("I2C Puppet SW v%d.%d\r\n", VERSION_MAJOR, VERSION_MINOR);
 
 	keyboard_add_key_callback(&key_callback);
-	keyboard_add_lock_callback(&key_lock_callback);
 
 	touchpad_add_touch_callback(&touch_callback);
 

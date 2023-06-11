@@ -22,21 +22,10 @@ struct key_callback
 	struct key_callback *next;
 };
 
-struct key_lock_callback
-{
-	void (*func)(bool, bool);
-	struct key_lock_callback *next;
-};
-
 void keyboard_inject_event(char key, enum key_state state);
 
 bool keyboard_is_key_down(char key);
-bool keyboard_is_mod_on(enum key_mod mod);
 
 void keyboard_add_key_callback(struct key_callback *callback);
-void keyboard_add_lock_callback(struct key_lock_callback *callback);
-
-bool keyboard_get_capslock(void);
-bool keyboard_get_numlock(void);
 
 void keyboard_init(void);
