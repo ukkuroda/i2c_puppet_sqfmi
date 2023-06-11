@@ -154,6 +154,90 @@ static void next_item_state(struct list_item * const p_item, const bool pressed)
 	}
 }
 
+#if 0
+static void update_list(struct list_item* list, int keycode, bool pressed)
+{
+	// Find active keycode in list
+	// Keep track of a free index in the list for a new insertion
+	int32_t active_key_idx = -1;
+	int32_t free_idx = -1;
+	for (int32_t i = 0 ; i < LIST_SIZE; ++i) {
+
+		// Save free index
+		if (list[i].p_entry->chr == 0) {
+			free_idx = i;
+			continue;
+		}
+
+		// Found active keycode in the list
+		if (list[i].p_entry->chr == keycode) {
+			active_key_idx = i;
+			break;
+		}
+	}
+
+	// Pressed, but not in list. Insert new keycode
+	if (pressed && (active_key_idx < 0)) {
+
+		// Drop new keycodes if the list is full
+		if (free_idx >= 0) {
+
+			// Create new list item in the Idle state
+			list[free_idx].p_entry->chr = keycode;
+			list[free_idx].state = KEY_STATE_IDLE;
+			// Active index is now the newly-created item
+			active_key_idx = free_idx;
+		}
+	}
+
+	// If we had an active index, update its state
+	if (active_key_idx >= 0) {
+		next_item_state(&list[active_key_idx], pressed);
+	}
+}
+#else
+static void update_list(struct list_item* list, struct entry const* entry, bool pressed)
+{
+	// Find active keycode in list
+	// Keep track of a free index in the list for a new insertion
+	int32_t active_key_idx = -1;
+	int32_t free_idx = -1;
+	for (int32_t i = 0 ; i < LIST_SIZE; ++i) {
+
+		// Save free index
+		if (list[i].p_entry->chr == 0) {
+			free_idx = i;
+			continue;
+		}
+
+		// Found active keycode in the list
+		if (list[i].p_entry->chr == entry->chr) {
+			active_key_idx = i;
+			break;
+		}
+	}
+
+	// Pressed, but not in list. Insert new keycode
+	if (pressed && (active_key_idx < 0)) {
+
+		// Drop new keycodes if the list is full
+		if (free_idx >= 0) {
+
+			// Create new list item in the Idle state
+			list[free_idx].p_entry = entry;
+			list[free_idx].state = KEY_STATE_IDLE;
+			// Active index is now the newly-created item
+			active_key_idx = free_idx;
+		}
+	}
+
+	// If we had an active index, update its state
+	if (active_key_idx >= 0) {
+		next_item_state(&list[active_key_idx], pressed);
+	}
+}
+#endif
+
 static int64_t timer_task(alarm_id_t id, void *user_data)
 {
 	(void)id;
@@ -167,34 +251,7 @@ static int64_t timer_task(alarm_id_t id, void *user_data)
 		for (uint32_t r = 0; r < NUM_OF_ROWS; ++r) {
 			const bool pressed = (gpio_get(row_pins[r]) == 0);
 			const int32_t key_idx = (int32_t)((r * NUM_OF_COLS) + c);
-
-			int32_t list_idx = -1;
-			for (int32_t i = 0; i < LIST_SIZE; ++i) {
-				if (self.list[i].p_entry != &((const struct entry*)kbd_entries)[key_idx])
-					continue;
-
-				list_idx = i;
-				break;
-			}
-
-			if (list_idx > -1) {
-				next_item_state(&self.list[list_idx], pressed);
-				continue;
-			}
-
-			if (!pressed)
-				continue;
-
-			for (uint32_t i = 0 ; i < LIST_SIZE; ++i) {
-				if (self.list[i].p_entry != NULL)
-					continue;
-
-				self.list[i].p_entry = &((const struct entry*)kbd_entries)[key_idx];
-				self.list[i].state = KEY_STATE_IDLE;
-				next_item_state(&self.list[i], pressed);
-
-				break;
-			}
+			update_list(self.list, &((const struct entry*)kbd_entries)[key_idx], pressed);
 		}
 
 		gpio_put(col_pins[c], 1);
@@ -205,34 +262,7 @@ static int64_t timer_task(alarm_id_t id, void *user_data)
 #if NUM_OF_BTNS > 0
 	for (uint32_t b = 0; b < NUM_OF_BTNS; ++b) {
 		const bool pressed = (gpio_get(btn_pins[b]) == 0);
-
-		int32_t list_idx = -1;
-		for (int32_t i = 0; i < LIST_SIZE; ++i) {
-			if (self.list[i].p_entry != &((const struct entry*)btn_entries)[b])
-				continue;
-
-			list_idx = i;
-			break;
-		}
-
-		if (list_idx > -1) {
-			next_item_state(&self.list[list_idx], pressed);
-			continue;
-		}
-
-		if (!pressed)
-			continue;
-
-		for (uint32_t i = 0 ; i < LIST_SIZE; ++i) {
-			if (self.list[i].p_entry != NULL)
-				continue;
-
-			self.list[i].p_entry = &((const struct entry*)btn_entries)[b];
-			self.list[i].state = KEY_STATE_IDLE;
-			next_item_state(&self.list[i], pressed);
-
-			break;
-		}
+		update_list(self.list, &((const struct entry*)btn_entries)[b], pressed);
 	}
 #endif
 
