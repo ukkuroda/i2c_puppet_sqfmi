@@ -15,7 +15,7 @@ struct entry
 
 struct list_item
 {
-	const struct entry *p_entry;
+	char keycode;
 	uint32_t hold_start_time;
 	enum key_state state;
 };
@@ -96,14 +96,13 @@ static int64_t rk(alarm_id_t id, void *user_data)
 
 static void transition_to(struct list_item * const p_item, const enum key_state next_state)
 {
-	const struct entry * const p_entry = p_item->p_entry;
-
 	p_item->state = next_state;
 
-	if (!p_entry || (p_entry->chr == 0))
+	if (p_item->keycode == 0) {
 		return;
+	}
 
-	keyboard_inject_event(p_item->p_entry->chr, next_state);
+	keyboard_inject_event(p_item->keycode, next_state);
 }
 
 static void next_item_state(struct list_item * const p_item, const bool pressed)
@@ -129,12 +128,11 @@ static void next_item_state(struct list_item * const p_item, const bool pressed)
 			if (!pressed) {
 				transition_to(p_item, KEY_STATE_RELEASED);
 			} else if ((to_ms_since_boot(get_absolute_time()) - p_item->hold_start_time) > LONG_HOLD_MS) {
-				if(p_item->p_entry->chr == KEY_STOP){
+				if(p_item->keycode == KEY_STOP){
 					//inject power key
-					char key = KEY_STOP;
-					keyboard_inject_event(key, KEY_STATE_PRESSED);
+					keyboard_inject_event(KEY_STOP, KEY_STATE_PRESSED);
 					//delay release key
-					add_alarm_in_ms(10, rk, (void*)(int)key, true);
+					add_alarm_in_ms(10, rk, (void*)KEY_STOP, true);
 				}
 				transition_to(p_item, KEY_STATE_LONG_HOLD);
 			}
@@ -147,7 +145,7 @@ static void next_item_state(struct list_item * const p_item, const bool pressed)
 
 		case KEY_STATE_RELEASED:
 		{
-			p_item->p_entry = NULL;
+			p_item->keycode = 0;
 			transition_to(p_item, KEY_STATE_IDLE);
 			break;
 		}
@@ -205,13 +203,13 @@ static void update_list(struct list_item* list, struct entry const* entry, bool 
 	for (int32_t i = 0 ; i < LIST_SIZE; ++i) {
 
 		// Save free index
-		if (list[i].p_entry->chr == 0) {
+		if (list[i].keycode == 0) {
 			free_idx = i;
 			continue;
 		}
 
 		// Found active keycode in the list
-		if (list[i].p_entry->chr == entry->chr) {
+		if (list[i].keycode == entry->chr) {
 			active_key_idx = i;
 			break;
 		}
@@ -224,7 +222,7 @@ static void update_list(struct list_item* list, struct entry const* entry, bool 
 		if (free_idx >= 0) {
 
 			// Create new list item in the Idle state
-			list[free_idx].p_entry = entry;
+			list[free_idx].keycode = entry->chr;
 			list[free_idx].state = KEY_STATE_IDLE;
 			// Active index is now the newly-created item
 			active_key_idx = free_idx;
