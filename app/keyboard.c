@@ -33,34 +33,15 @@ static const uint8_t col_pins[NUM_OF_COLS] =
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wmissing-field-initializers"
 
-/*
-
-In https://github.com/wallComputer/bbqX0kbd_driver/blob/main/source/mod_src/bbq20kbd_pmod_codes.h
-'f' is apped to KEY_ESC
-
-*/
-#if 0
-static const struct entry kbd_entries[][NUM_OF_COLS] =
-{
-	{ { KEY_COMPOSE },  { 'W', '1' },              { 'G', '/' },              { 'S', '4' },              { 'L', '"'  },  { 'H' , ':' } },
-	{ { },                 { 'Q', '#' },              { 'R', '3' },              { 'E', '2' },              { 'O', '+'  },  { 'U', '_'  } },
-	{ { KEY_OPEN },   { '~', '0' },              { 'F', '6' },              { KEY_LEFTSHIFT }, { 'K', '\''  }, { 'J', ';'  } },
-	{ { },                 { ' ', '\t' },             { 'C', '9' },              { 'Z', '7' },              { 'M', '.'  },  { 'N', ','  } },
-	{ { KEY_PROPS },   KEY_LEFTMETA, { 'T', '(' },              { 'D', '5' },              { 'I', '-'  },  { 'Y', ')'  } },
-	{ { KEY_ESC },  KEY_LEFTALT, { 'V', '?' },              { 'X', '8' },              { '$', '`'  },  { 'B', '!'  } },
-	{ { },                 { 'A', '*' },              KEY_RIGHTSHIFT, { 'P', '@' },              { '\b', 'f' },       { '\n', '|' } },
+static const uint8_t kbd_entries[NUM_OF_ROWS][NUM_OF_COLS] = {
+{ KEY_COMPOSE, KEY_W, KEY_G, KEY_S, KEY_L, KEY_H },
+{         0x0, KEY_Q, KEY_R, KEY_E, KEY_O, KEY_U },
+{    KEY_OPEN, KEY_0, KEY_F, KEY_LEFTSHIFT, KEY_K, KEY_J },
+{         0x0, KEY_SPACE, KEY_C, KEY_Z, KEY_M, KEY_N },
+{   KEY_PROPS, KEY_LEFTMETA, KEY_T, KEY_D, KEY_I, KEY_Y },
+{     KEY_ESC, KEY_LEFTALT, KEY_V, KEY_X, KEY_MUTE, KEY_B },
+{         0x0, KEY_A, KEY_RIGHTSHIFT, KEY_P, KEY_BACKSPACE, KEY_ENTER },
 };
-#else
-static const struct entry kbd_entries[NUM_OF_ROWS][NUM_OF_COLS] = {
-{ {KEY_COMPOSE}, {KEY_W}, {KEY_G}, {KEY_S}, {KEY_L}, {KEY_H} },
-{            {}, {KEY_Q}, {KEY_R}, {KEY_E}, {KEY_O}, {KEY_U} },
-{    {KEY_OPEN}, {KEY_0}, {KEY_F}, {KEY_LEFTSHIFT}, {KEY_K}, {KEY_J} },
-{            {}, {KEY_SPACE}, {KEY_C}, {KEY_Z}, {KEY_M}, {KEY_N} },
-{   {KEY_PROPS}, {KEY_LEFTMETA}, {KEY_T}, {KEY_D}, {KEY_I}, {KEY_Y} },
-{     {KEY_ESC}, {KEY_LEFTALT}, {KEY_V}, {KEY_X}, {KEY_MUTE}, {KEY_B} },
-{            {}, {KEY_A}, {KEY_RIGHTSHIFT}, {KEY_P}, {KEY_BACKSPACE}, {KEY_ENTER} },
-};
-#endif
 
 #if NUM_OF_BTNS > 0
 static const struct entry btn_entries[NUM_OF_BTNS] =
@@ -152,55 +133,13 @@ static void next_item_state(struct list_item * const p_item, const bool pressed)
 	}
 }
 
-#if 0
-static void update_list(struct list_item* list, int keycode, bool pressed)
+static void update_list(struct list_item* list, char keycode, bool pressed)
 {
 	// Find active keycode in list
 	// Keep track of a free index in the list for a new insertion
 	int32_t active_key_idx = -1;
 	int32_t free_idx = -1;
-	for (int32_t i = 0 ; i < LIST_SIZE; ++i) {
-
-		// Save free index
-		if (list[i].p_entry->chr == 0) {
-			free_idx = i;
-			continue;
-		}
-
-		// Found active keycode in the list
-		if (list[i].p_entry->chr == keycode) {
-			active_key_idx = i;
-			break;
-		}
-	}
-
-	// Pressed, but not in list. Insert new keycode
-	if (pressed && (active_key_idx < 0)) {
-
-		// Drop new keycodes if the list is full
-		if (free_idx >= 0) {
-
-			// Create new list item in the Idle state
-			list[free_idx].p_entry->chr = keycode;
-			list[free_idx].state = KEY_STATE_IDLE;
-			// Active index is now the newly-created item
-			active_key_idx = free_idx;
-		}
-	}
-
-	// If we had an active index, update its state
-	if (active_key_idx >= 0) {
-		next_item_state(&list[active_key_idx], pressed);
-	}
-}
-#else
-static void update_list(struct list_item* list, struct entry const* entry, bool pressed)
-{
-	// Find active keycode in list
-	// Keep track of a free index in the list for a new insertion
-	int32_t active_key_idx = -1;
-	int32_t free_idx = -1;
-	for (int32_t i = 0 ; i < LIST_SIZE; ++i) {
+	for (int32_t i = 0; i < LIST_SIZE; i++) {
 
 		// Save free index
 		if (list[i].keycode == 0) {
@@ -209,7 +148,7 @@ static void update_list(struct list_item* list, struct entry const* entry, bool 
 		}
 
 		// Found active keycode in the list
-		if (list[i].keycode == entry->chr) {
+		if (list[i].keycode == keycode) {
 			active_key_idx = i;
 			break;
 		}
@@ -222,7 +161,7 @@ static void update_list(struct list_item* list, struct entry const* entry, bool 
 		if (free_idx >= 0) {
 
 			// Create new list item in the Idle state
-			list[free_idx].keycode = entry->chr;
+			list[free_idx].keycode = keycode;
 			list[free_idx].state = KEY_STATE_IDLE;
 			// Active index is now the newly-created item
 			active_key_idx = free_idx;
@@ -234,7 +173,6 @@ static void update_list(struct list_item* list, struct entry const* entry, bool 
 		next_item_state(&list[active_key_idx], pressed);
 	}
 }
-#endif
 
 static int64_t timer_task(alarm_id_t id, void *user_data)
 {
@@ -249,7 +187,7 @@ static int64_t timer_task(alarm_id_t id, void *user_data)
 		for (uint32_t r = 0; r < NUM_OF_ROWS; ++r) {
 			const bool pressed = (gpio_get(row_pins[r]) == 0);
 			const int32_t key_idx = (int32_t)((r * NUM_OF_COLS) + c);
-			update_list(self.list, &((const struct entry*)kbd_entries)[key_idx], pressed);
+			update_list(self.list, kbd_entries[r][c], pressed);
 		}
 
 		gpio_put(col_pins[c], 1);
@@ -260,7 +198,7 @@ static int64_t timer_task(alarm_id_t id, void *user_data)
 #if NUM_OF_BTNS > 0
 	for (uint32_t b = 0; b < NUM_OF_BTNS; ++b) {
 		const bool pressed = (gpio_get(btn_pins[b]) == 0);
-		update_list(self.list, &((const struct entry*)btn_entries)[b], pressed);
+		//update_list(self.list, ((const struct entry*)btn_entries)[b].chr, pressed);
 	}
 #endif
 
