@@ -141,7 +141,7 @@
 
 #define KEY_102ND 0x64 // Keyboard Non-US \ and |
 #define KEY_COMPOSE 0x65 // Keyboard Application
-#define _KEY_POWER 0x66 // Keyboard Power
+#define KEY_POWER 0x66 // Keyboard Power
 #define KEY_KPEQUAL 0x67 // Keypad =
 
 #define KEY_F13 0x68 // Keyboard F13

@@ -6,19 +6,23 @@
 
 #include <pico/stdlib.h>
 
-#define LIST_SIZE	10 // size of the list keeping track of all the pressed keys
+// Size of the list keeping track of all the pressed keys
+#define MAX_TRACKED_KEYS 10
 
-struct entry
-{
-	char chr;
-};
-
-struct list_item
+typedef struct
 {
 	char keycode;
 	uint32_t hold_start_time;
 	enum key_state state;
-};
+} tracked_key_t;
+
+static struct
+{
+	struct key_callback *key_callbacks;
+	tracked_key_t tracked_keys[MAX_TRACKED_KEYS];
+} self;
+
+// Key and buttons definitions
 
 static const uint8_t row_pins[NUM_OF_ROWS] =
 {
@@ -33,122 +37,123 @@ static const uint8_t col_pins[NUM_OF_COLS] =
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wmissing-field-initializers"
 
-static const uint8_t kbd_entries[NUM_OF_ROWS][NUM_OF_COLS] = {
-{ KEY_COMPOSE, KEY_W, KEY_G, KEY_S, KEY_L, KEY_H },
-{         0x0, KEY_Q, KEY_R, KEY_E, KEY_O, KEY_U },
-{    KEY_OPEN, KEY_0, KEY_F, KEY_LEFTSHIFT, KEY_K, KEY_J },
-{         0x0, KEY_SPACE, KEY_C, KEY_Z, KEY_M, KEY_N },
-{   KEY_PROPS, KEY_LEFTMETA, KEY_T, KEY_D, KEY_I, KEY_Y },
-{     KEY_ESC, KEY_LEFTALT, KEY_V, KEY_X, KEY_MUTE, KEY_B },
-{         0x0, KEY_A, KEY_RIGHTSHIFT, KEY_P, KEY_BACKSPACE, KEY_ENTER },
+static const uint8_t kbd_entries[NUM_OF_ROWS][NUM_OF_COLS] =
+{ { KEY_COMPOSE, KEY_W, KEY_G, KEY_S, KEY_L, KEY_H }
+, {         0x0, KEY_Q, KEY_R, KEY_E, KEY_O, KEY_U }
+, {    KEY_OPEN, KEY_0, KEY_F, KEY_LEFTSHIFT, KEY_K, KEY_J }
+, {         0x0, KEY_SPACE, KEY_C, KEY_Z, KEY_M, KEY_N }
+, {   KEY_PROPS, KEY_LEFTMETA, KEY_T, KEY_D, KEY_I, KEY_Y }
+, {     KEY_ESC, KEY_LEFTALT, KEY_V, KEY_X, KEY_MUTE, KEY_B }
+, {         0x0, KEY_A, KEY_RIGHTSHIFT, KEY_P, KEY_BACKSPACE, KEY_ENTER }
 };
 
 #if NUM_OF_BTNS > 0
-static const struct entry btn_entries[NUM_OF_BTNS] =
-{
-	BTN_KEYS
-};
+static const char btn_entries[NUM_OF_BTNS] = { KEY_STOP };
 
-static const uint8_t btn_pins[NUM_OF_BTNS] =
-{
-	PINS_BTNS
-};
+static const uint8_t btn_pins[NUM_OF_BTNS] = { 4 };
 #endif
 
 #pragma GCC diagnostic pop
 
-static struct
+static int64_t release_key(alarm_id_t _, void *keycode)
 {
-	struct key_callback *key_callbacks;
-
-	struct list_item list[LIST_SIZE];
-} self;
-
-static int64_t rk(alarm_id_t id, void *user_data)
-{
-	(void)id;
-
-	const int data = (int)user_data;
-
-	keyboard_inject_event((char)data, KEY_STATE_RELEASED);
+	keyboard_inject_event((char)(uint32_t)keycode, KEY_STATE_RELEASED);
 
 	return 0;
 }
 
-static void transition_to(struct list_item * const p_item, const enum key_state next_state)
+static void transition_to(tracked_key_t* key, enum key_state const next_state)
 {
-	p_item->state = next_state;
+	// Transition to next state
+	key->state = next_state;
 
-	if (p_item->keycode == 0) {
-		return;
+	// Don't send power key over USB
+	if ((key->keycode != 0) && (key->keycode != KEY_STOP)) {
+		keyboard_inject_event(key->keycode, next_state);
 	}
-
-	keyboard_inject_event(p_item->keycode, next_state);
 }
 
-static void next_item_state(struct list_item * const p_item, const bool pressed)
+static uint32_t key_held_for(tracked_key_t const* key)
 {
-	switch (p_item->state) {
+	return to_ms_since_boot(get_absolute_time()) - key->hold_start_time;
+}
+
+static void next_item_state(tracked_key_t* key, bool const pressed)
+{
+	switch (key->state) {
+
+		// Idle -> Pressed
 		case KEY_STATE_IDLE:
 			if (pressed) {
-				transition_to(p_item, KEY_STATE_PRESSED);
+				transition_to(key, KEY_STATE_PRESSED);
 
-				p_item->hold_start_time = to_ms_since_boot(get_absolute_time());
+				// Track hold time for transitioning to Hold and Long Hold states
+				key->hold_start_time = to_ms_since_boot(get_absolute_time());
 			}
 			break;
 
+		// Pressed -> Hold | Released
 		case KEY_STATE_PRESSED:
-			if ((to_ms_since_boot(get_absolute_time()) - p_item->hold_start_time) > (reg_get_value(REG_ID_HLD) * 10)) {
-				transition_to(p_item, KEY_STATE_HOLD);
-			 } else if(!pressed) {
-				transition_to(p_item, KEY_STATE_RELEASED);
+
+			if (key_held_for(key) > (reg_get_value(REG_ID_HLD) * 10)) {
+				transition_to(key, KEY_STATE_HOLD);
+
+			} else if (!pressed) {
+				transition_to(key, KEY_STATE_RELEASED);
 			}
 			break;
 
+		// Hold -> Released | Long Hold
 		case KEY_STATE_HOLD:
 			if (!pressed) {
-				transition_to(p_item, KEY_STATE_RELEASED);
-			} else if ((to_ms_since_boot(get_absolute_time()) - p_item->hold_start_time) > LONG_HOLD_MS) {
-				if(p_item->keycode == KEY_STOP){
-					//inject power key
+				transition_to(key, KEY_STATE_RELEASED);
+
+			} else if (key_held_for(key) > LONG_HOLD_MS) {
+
+				// Special handling for power key
+				if(key->keycode == KEY_STOP){
 					keyboard_inject_event(KEY_STOP, KEY_STATE_PRESSED);
-					//delay release key
-					add_alarm_in_ms(10, rk, (void*)KEY_STOP, true);
+					add_alarm_in_ms(10, release_key, (void*)KEY_STOP, true);
 				}
-				transition_to(p_item, KEY_STATE_LONG_HOLD);
+
+				transition_to(key, KEY_STATE_LONG_HOLD);
 			}
 			break;
 
+		// Long Hold -> Released
 		case KEY_STATE_LONG_HOLD:
-			if (!pressed)
-				transition_to(p_item, KEY_STATE_RELEASED);
-			break;			
-
-		case KEY_STATE_RELEASED:
-		{
-			p_item->keycode = 0;
-			transition_to(p_item, KEY_STATE_IDLE);
+			if (!pressed) {
+				transition_to(key, KEY_STATE_RELEASED);
+			}
 			break;
-		}
+
+		// Released -> Idle
+		case KEY_STATE_RELEASED:
+
+			// Reset list entry so it can be reused
+			key->keycode = 0;
+
+			transition_to(key, KEY_STATE_IDLE);
+			break;
 	}
 }
 
-static void update_list(struct list_item* list, char keycode, bool pressed)
+static void update_tracked_keys(tracked_key_t* keys, char keycode, bool pressed)
 {
 	// Find active keycode in list
 	// Keep track of a free index in the list for a new insertion
 	int32_t active_key_idx = -1;
 	int32_t free_idx = -1;
-	for (int32_t i = 0; i < LIST_SIZE; i++) {
+	for (int32_t i = 0; i < MAX_TRACKED_KEYS; i++) {
 
 		// Save free index
-		if (list[i].keycode == 0) {
+		if (keys[i].keycode == 0) {
 			free_idx = i;
 			continue;
 		}
 
 		// Found active keycode in the list
-		if (list[i].keycode == keycode) {
+		if (keys[i].keycode == keycode) {
 			active_key_idx = i;
 			break;
 		}
@@ -161,8 +166,8 @@ static void update_list(struct list_item* list, char keycode, bool pressed)
 		if (free_idx >= 0) {
 
 			// Create new list item in the Idle state
-			list[free_idx].keycode = keycode;
-			list[free_idx].state = KEY_STATE_IDLE;
+			keys[free_idx].keycode = keycode;
+			keys[free_idx].state = KEY_STATE_IDLE;
 			// Active index is now the newly-created item
 			active_key_idx = free_idx;
 		}
@@ -170,7 +175,7 @@ static void update_list(struct list_item* list, char keycode, bool pressed)
 
 	// If we had an active index, update its state
 	if (active_key_idx >= 0) {
-		next_item_state(&list[active_key_idx], pressed);
+		next_item_state(&keys[active_key_idx], pressed);
 	}
 }
 
@@ -187,7 +192,7 @@ static int64_t timer_task(alarm_id_t id, void *user_data)
 		for (uint32_t r = 0; r < NUM_OF_ROWS; ++r) {
 			const bool pressed = (gpio_get(row_pins[r]) == 0);
 			const int32_t key_idx = (int32_t)((r * NUM_OF_COLS) + c);
-			update_list(self.list, kbd_entries[r][c], pressed);
+			update_tracked_keys(self.tracked_keys, kbd_entries[r][c], pressed);
 		}
 
 		gpio_put(col_pins[c], 1);
@@ -198,7 +203,7 @@ static int64_t timer_task(alarm_id_t id, void *user_data)
 #if NUM_OF_BTNS > 0
 	for (uint32_t b = 0; b < NUM_OF_BTNS; ++b) {
 		const bool pressed = (gpio_get(btn_pins[b]) == 0);
-		//update_list(self.list, ((const struct entry*)btn_entries)[b].chr, pressed);
+		update_tracked_keys(self.tracked_keys, btn_entries[b], pressed);
 	}
 #endif
 

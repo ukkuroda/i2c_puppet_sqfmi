@@ -50,39 +50,16 @@ static int64_t timer_task(alarm_id_t id, void *user_data)
 static void key_cb(char key, enum key_state state)
 {
 	if (tud_hid_n_ready(USB_ITF_KEYBOARD) && reg_is_bit_set(REG_ID_CF2, CF2_USB_KEYB_ON)) {
-		#if 0
-		uint8_t conv_table[128][2]		= { HID_ASCII_TO_KEYCODE };
-		conv_table['\n'][1]				= HID_KEY_ENTER; // Fixup: Enter instead of Return
-		conv_table[KEY_JOY_UP][1]		= HID_KEY_ARROW_UP;
-		conv_table[KEY_JOY_DOWN][1]		= HID_KEY_ARROW_DOWN;
-		conv_table[KEY_JOY_LEFT][1]		= HID_KEY_ARROW_LEFT;
-		conv_table[KEY_JOY_RIGHT][1]	= HID_KEY_ARROW_RIGHT;
-		#endif
-
 		uint8_t keycode[6] = { 0 };
 		uint8_t modifier   = 0;
 
 		if (state == KEY_STATE_PRESSED) {
-			#if 0
-			static char raws[9] = {KEY_OPEN, KEY_PROPS, KEY_COMPOSE, KEY_ESC, KEY_STOP,
-				KEY_LEFTSHIFT, KEY_LEFTALT, KEY_RIGHTSHIFT, KEY_LEFTMETA};
-			bool raw = false;
-			for (int i =0 ;i < 9; i++) {
-				if (key == raws[i]) {
-					raw = true;
-					break;
-				}
-			}
-			keycode[0] = (raw)
-				? key
-				: conv_table[(int)key][1];
-			#else
 			keycode[0] = key;
-			#endif
 		}
 
-		if (state != KEY_STATE_HOLD)
+		if (state != KEY_STATE_HOLD) {
 			tud_hid_n_keyboard_report(USB_ITF_KEYBOARD, 0, modifier, keycode);
+		}
 	}
 
 	if (tud_hid_n_ready(USB_ITF_MOUSE) && reg_is_bit_set(REG_ID_CF2, CF2_USB_MOUSE_ON)) {
