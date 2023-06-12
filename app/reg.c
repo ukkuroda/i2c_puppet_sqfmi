@@ -135,10 +135,10 @@ void reg_process_packet(uint8_t in_reg, uint8_t in_data, uint8_t *out_buffer, ui
 
 	case REG_ID_FIF:
 	{
-		const struct fifo_item item = fifo_dequeue();
+		struct fifo_item item = fifo_dequeue();
 
-		out_buffer[0] = (uint8_t)item.state;
-		out_buffer[1] = (uint8_t)item.key;
+		out_buffer[0] = ((uint8_t*)&item)[0];
+		out_buffer[1] = ((uint8_t*)&item)[1];
 		*out_len = sizeof(uint8_t) * 2;
 		break;
 	}

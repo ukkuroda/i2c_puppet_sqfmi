@@ -47,18 +47,22 @@ static int64_t timer_task(alarm_id_t id, void *user_data)
 	return USB_TASK_INTERVAL_US;
 }
 
-static void key_cb(char key, enum key_state state)
+static void key_cb(uint8_t key, uint8_t modifiers, enum key_state state)
 {
 	if (tud_hid_n_ready(USB_ITF_KEYBOARD) && reg_is_bit_set(REG_ID_CF2, CF2_USB_KEYB_ON)) {
 		uint8_t keycode[6] = { 0 };
-		uint8_t modifier   = 0;
 
 		if (state == KEY_STATE_PRESSED) {
 			keycode[0] = key;
+
+		} else {
+			// Modifier without keycode will apply modifiers to next key
+			// even if the next key is 0
+			modifiers = 0;
 		}
 
 		if (state != KEY_STATE_HOLD) {
-			tud_hid_n_keyboard_report(USB_ITF_KEYBOARD, 0, modifier, keycode);
+			tud_hid_n_keyboard_report(USB_ITF_KEYBOARD, 0, modifiers, keycode);
 		}
 	}
 

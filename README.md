@@ -10,6 +10,25 @@ On the I2C side, you can access the key presses, the trackpad state, you can con
 
 See [Protocol](#protocol) for details of the I2C puppet.
 
+## Modifications
+
+Firmware has been updated to use BB10-style sticky modifier keys. It has a corresponding kernel module that has been updated to read modifier fields over I2C.
+
+Holding a modifier key (shift, physical alt, Symbol) while typing an alpha keys will apply the modifier to all alpha keys until the modifier is released.
+
+One press and release of the modifier will enter sticky mode, applying the modifier to
+the next alpha key only. If the same modifier key is pressed and released again in sticky mode, it will be canceled.
+
+Call is mapped to Control. The Berry button is mapped to `KEY_PROPS`. Clicking the touchpad button is mapped to `KEY_COMPOSE`. Back is mapped to Escape. End Call is not sent as a key, but holding it will still trigger the power-off routine. Symbol is mapped to AltGr (Right Alt).
+
+This firmware targets the Beepberry hardware. It can still act as a USB keyboard, but physical alt keys will not work unless you remap their values.
+
+Physical alt does not send an actual Alt key, but remaps the output scancodes to the range 135 to 161 in QWERTY order. This should be combined with a keymap for proper symbol output. This allows symbols to be customized without rebuilding the firmware, as well as proper use of the actual Alt key.
+
+### The rest of the Readme
+
+I have not yet updated any other part of the Readme file.
+
 ## Checkout
 
 The code depends on the Raspberry Pi Pico SDK, which is added as a submodule. Because the Pico SDK includes TinyUSB as a module, it is not recommended to do a recursive submodule init, and rather follow these steps:

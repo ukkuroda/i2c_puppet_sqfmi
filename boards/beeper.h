@@ -48,7 +48,7 @@
 #define PINS_BTNS \
 	4,
 #define BTN_KEYS \
-	{ KEY_BTN_RIGHT2 },
+	{ KEY_POWER },
 
 #define PIN_GPIOEXP0		PIN_PI_SHUTDOWN
 // #define PIN_GPIOEXP1		17

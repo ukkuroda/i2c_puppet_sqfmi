@@ -8,9 +8,10 @@
 
 #include <pico/stdlib.h>
 
-static void key_cb(char key, enum key_state state)
+static void key_cb(uint8_t key, uint8_t modifiers, enum key_state state)
 {
 	(void)key;
+	(void)modifiers;
 	(void)state;
 
 	if (!reg_is_bit_set(REG_ID_CFG, CFG_KEY_INT))
