@@ -5,8 +5,6 @@
 #include "touchpad.h"
 #include "reg.h"
 
-#include "input-event-codes.h"
-
 #include <hardware/irq.h>
 #include <pico/mutex.h>
 #include <tusb.h>

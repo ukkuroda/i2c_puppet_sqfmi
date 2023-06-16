@@ -16,9 +16,6 @@ enum key_state
 
 #define LONG_HOLD_MS    3000
 
-#define KEY_POWER       0xEE
-#define LONG_HOLD_MS    3000
-
 struct key_callback
 {
 	void (*func)(uint8_t key, uint8_t modifiers, enum key_state state);
