@@ -15,7 +15,7 @@
 
 #define PICO_STDIO_USB_STDOUT_TIMEOUT_US 500000
 
-static void key_cb(uint8_t key, uint8_t modifiers, enum key_state state)
+static void key_cb(uint8_t key, enum key_state state)
 {
 	printf("key: 0x%02X/%d/%c, state: %d\r\n", key, key, key, state);
 }

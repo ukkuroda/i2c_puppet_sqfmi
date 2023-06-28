@@ -6,10 +6,7 @@ struct fifo_item
 {
 	uint8_t scancode;
 
-	uint8_t _ : 1;
-	uint8_t shift_modifier : 1;
-	uint8_t ctrl_modifier : 1;
-	uint8_t altgr_modifier : 1;
+	uint8_t _ : 4;
 	enum key_state state : 4;
 };
 

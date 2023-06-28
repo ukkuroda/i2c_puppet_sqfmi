@@ -18,7 +18,7 @@ enum key_state
 
 struct key_callback
 {
-	void (*func)(uint8_t key, uint8_t modifiers, enum key_state state);
+	void (*func)(uint8_t key, enum key_state state);
 	struct key_callback *next;
 };
 
