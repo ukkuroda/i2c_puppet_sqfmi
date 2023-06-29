@@ -231,7 +231,7 @@ void reg_init(void)
 	reg_set_value(REG_ID_FRQ, 10);	// ms
 	reg_set_value(REG_ID_BK2, 255);
 	reg_set_value(REG_ID_PUD, 0xFF);
-	reg_set_value(REG_ID_HLD, 30);	// 10ms units
+	reg_set_value(REG_ID_HLD, 100);	// 10ms units
 	reg_set_value(REG_ID_ADR, 0x1F);
 	reg_set_value(REG_ID_IND, 1);	// ms
 	reg_set_value(REG_ID_CF2, CF2_TOUCH_INT | CF2_USB_KEYB_ON | CF2_USB_MOUSE_ON);
