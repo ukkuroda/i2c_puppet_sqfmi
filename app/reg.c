@@ -9,6 +9,7 @@
 #include "touchpad.h"
 #include "pi.h"
 #include "hardware/adc.h"
+#include "rtc.h"
 
 #include <pico/stdlib.h>
 #include <RP2040.h> // TODO: When there's more than one RP chip, change this to be more generic
@@ -58,6 +59,7 @@ void reg_process_packet(uint8_t in_reg, uint8_t in_data, uint8_t *out_buffer, ui
 	case REG_ID_ADR:
 	case REG_ID_IND:
 	case REG_ID_CF2:
+	case REG_ID_REWAKE_TIME:
 	{
 		if (is_write) {
 			reg_set_value(reg, in_data);
@@ -141,6 +143,37 @@ void reg_process_packet(uint8_t in_reg, uint8_t in_data, uint8_t *out_buffer, ui
 			out_buffer[0] = reg_get_value(reg);
 			*out_len = sizeof(uint8_t);
 		}
+		break;
+	}
+
+	// Reawake timer
+	case REG_ID_REWAKE:
+	{
+		break;
+	}
+
+	// Real time clock
+	case REG_ID_RTC_SEC:
+	case REG_ID_RTC_MIN:
+	case REG_ID_RTC_HOUR:
+	case REG_ID_RTC_MDAY:
+	case REG_ID_RTC_MON:
+	case REG_ID_RTC_YEAR:
+	{
+		if (is_write) {
+			reg_set_value(reg, in_data);
+		} else {
+			out_buffer[0] = rtc_get(reg);
+			*out_len = sizeof(uint8_t);
+		}
+		break;
+	}
+
+	case REG_ID_RTC_COMMIT:
+	{
+		rtc_set(reg_get_value(REG_ID_RTC_YEAR), reg_get_value(REG_ID_RTC_MON),
+			reg_get_value(REG_ID_RTC_MDAY), reg_get_value(REG_ID_RTC_HOUR),
+			reg_get_value(REG_ID_RTC_MIN), reg_get_value(REG_ID_RTC_SEC));
 		break;
 	}
 

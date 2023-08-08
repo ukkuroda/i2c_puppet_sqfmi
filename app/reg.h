@@ -34,6 +34,17 @@ enum reg_id
 	REG_ID_LED_G  = 0x22,
 	REG_ID_LED_B  = 0x23,
 
+	REG_ID_REWAKE_TIME = 0x24, // Power on the Pi in this many minutes
+	REG_ID_REWAKE = 0x25, // Write to shut off Pi, power on after REWAKE_TIME
+
+	REG_ID_RTC_SEC = 0x26,
+	REG_ID_RTC_MIN = 0x27,
+	REG_ID_RTC_HOUR = 0x28,
+	REG_ID_RTC_MDAY = 0x29,
+	REG_ID_RTC_MON = 0x2A,
+	REG_ID_RTC_YEAR = 0x2B, // Years since 1900
+	REG_ID_RTC_COMMIT = 0x2C,
+
 	REG_ID_LAST,
 };
 

@@ -8,7 +8,7 @@
 
 #include <pico/stdlib.h>
 
-void pi_init(void)
+void pi_power_on(void)
 {
     //Status LED
     led_init();
@@ -22,6 +22,11 @@ void pi_init(void)
 	gpio_init(PIN_PI_PWR);
 	gpio_set_dir(PIN_PI_PWR, GPIO_OUT);
 	gpio_put(PIN_PI_PWR, 1);
+}
+
+void pi_send_power_off(void)
+{
+	// Empty
 }
 
 void led_init(void){
