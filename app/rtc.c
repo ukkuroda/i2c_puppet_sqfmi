@@ -19,19 +19,19 @@ static int zeller(int year, int month, int day)
 }
 static int dow(int year, int month, int day)
 {
-	return (zeller (year, month, day) % 7) + 1;
+	return (zeller (year, month, day) % 7);
 }
 
 void rtc_set(uint8_t year, uint8_t month, uint8_t day, uint8_t hour, uint8_t min, uint8_t sec)
 {
 	datetime_t t;
-	t.year = year;
+	t.year = year + 1900;
 	t.month = month;
 	t.day = day;
 	t.hour = hour;
 	t.min = min;
 	t.sec = sec;
-	t.dotw = dow(year, month, day);
+	t.dotw = dow(t.year, month, day);
 
 	rtc_set_datetime(&t);
 }
