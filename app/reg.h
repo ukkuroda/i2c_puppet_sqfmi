@@ -27,7 +27,7 @@ enum reg_id
 	REG_ID_CF2 = 0x14, // config 2
 	REG_ID_TOX = 0x15, // touch delta x since last read, at most (-128 to 127)
 	REG_ID_TOY = 0x16, // touch delta y since last read, at most (-128 to 127)
-	
+
 	REG_ID_ADC = 0x17,
 	REG_ID_LED    = 0x20,
 	REG_ID_LED_R  = 0x21,
@@ -44,6 +44,8 @@ enum reg_id
 	REG_ID_RTC_MON = 0x2A,
 	REG_ID_RTC_YEAR = 0x2B, // Years since 1900
 	REG_ID_RTC_COMMIT = 0x2C,
+
+	REG_ID_DRIVER_STATE = 0x2D, // Set when driver is loaded / unloaded cleanly
 
 	REG_ID_LAST,
 };

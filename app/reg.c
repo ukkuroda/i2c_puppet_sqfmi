@@ -60,6 +60,7 @@ void reg_process_packet(uint8_t in_reg, uint8_t in_data, uint8_t *out_buffer, ui
 	case REG_ID_IND:
 	case REG_ID_CF2:
 	case REG_ID_REWAKE_TIME:
+	case REG_ID_DRIVER_STATE:
 	{
 		if (is_write) {
 			reg_set_value(reg, in_data);
@@ -268,6 +269,7 @@ void reg_init(void)
 	reg_set_value(REG_ID_ADR, 0x1F);
 	reg_set_value(REG_ID_IND, 1);	// ms
 	reg_set_value(REG_ID_CF2, CF2_TOUCH_INT | CF2_USB_KEYB_ON | CF2_USB_MOUSE_ON);
+	reg_set_value(REG_ID_DRIVER_STATE, 0); // Driver not yet loaded
 
 	touchpad_add_touch_callback(&touch_callback);
 }

@@ -14,7 +14,7 @@ enum key_state
 	KEY_STATE_LONG_HOLD = 4,
 };
 
-#define LONG_HOLD_MS    3000
+#define LONG_HOLD_MS    5000
 
 struct key_callback
 {

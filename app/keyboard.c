@@ -73,6 +73,13 @@ static int64_t release_power_key_alarm_callback(alarm_id_t _, void* __)
 	return 0;
 }
 
+static int64_t pi_power_on_alarm_callback(alarm_id_t _, void* __)
+{
+	pi_power_on();
+
+	return 0;
+}
+
 static void transition_hold_key_state(struct hold_key* hold_key, bool const pressed)
 {
 	uint key_held_for;
@@ -109,16 +116,25 @@ static void transition_hold_key_state(struct hold_key* hold_key, bool const pres
 			// Power key can be long hold
 			} else if (hold_key->keycode == KEY_POWER) {
 
-				// Check for long hold time
-				key_held_for = to_ms_since_boot(get_absolute_time())
-					- hold_key->hold_start_time;
-				if (key_held_for > LONG_HOLD_MS) {
-
-					// Simulate press event and schedule release
-					keyboard_inject_event(KEY_POWER, KEY_STATE_PRESSED);
-					add_alarm_in_ms(10, release_power_key_alarm_callback, NULL, true);
-
+				// Driver unloaded, power back on
+				if (reg_get_value(REG_ID_DRIVER_STATE) == 0) {
+					add_alarm_in_ms(10, pi_power_on_alarm_callback, NULL, true);
 					hold_key->state = KEY_STATE_LONG_HOLD;
+
+				// Driver loaded, send power off
+				} else {
+
+					// Check for long hold time
+					key_held_for = to_ms_since_boot(get_absolute_time())
+						- hold_key->hold_start_time;
+					if (key_held_for > LONG_HOLD_MS) {
+
+						// Simulate press event and schedule release
+						keyboard_inject_event(KEY_POWER, KEY_STATE_PRESSED);
+						add_alarm_in_ms(10, release_power_key_alarm_callback, NULL, true);
+
+						hold_key->state = KEY_STATE_LONG_HOLD;
+					}
 				}
 			}
 			break;
