@@ -1,4 +1,4 @@
-# Beepberry for of I2C Puppet
+# I2C Puppet for Beepy
 
 This is a port of the old [BB Q10 Keyboard-to-I2C Software](https://github.com/solderparty/bbq10kbd_i2c_sw) to the RP2040, expanded with new features, while still staying backwards compatible.
 
