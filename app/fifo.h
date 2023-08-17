@@ -4,8 +4,10 @@
 
 struct fifo_item
 {
-	char key;
-	enum key_state state;
+	uint8_t scancode;
+
+	uint8_t _ : 4;
+	enum key_state state : 4;
 };
 
 uint8_t fifo_count(void);
