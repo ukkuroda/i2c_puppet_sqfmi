@@ -21,7 +21,7 @@ the next alpha key only. If the same modifier key is pressed and released again 
 
 Call is mapped to Control. The Berry button is mapped to `KEY_PROPS`. Clicking the touchpad button is mapped to `KEY_COMPOSE`. Back is mapped to Escape. End Call is not sent as a key, but holding it will still trigger the power-off routine. Symbol is mapped to AltGr (Right Alt).
 
-This firmware targets the Beepberry hardware. It can still act as a USB keyboard, but physical alt keys will not work unless you remap their values.
+This firmware targets the Beepy hardware. It can still act as a USB keyboard, but physical alt keys will not work unless you remap their values.
 
 Physical alt does not send an actual Alt key, but remaps the output scancodes to the range 135 to 161 in QWERTY order. This should be combined with a keymap for proper symbol output. This allows symbols to be customized without rebuilding the firmware, as well as proper use of the actual Alt key.
 
@@ -45,7 +45,7 @@ See the `boards` directory for a list of available boards.
 
     mkdir build
     cd build
-    cmake -DPICO_BOARD=beepberry -DCMAKE_BUILD_TYPE=Debug ..
+    cmake -DPICO_BOARD=beepy -DCMAKE_BUILD_TYPE=Debug ..
     make
 
 ## Vendor USB Class
