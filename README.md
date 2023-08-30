@@ -30,6 +30,7 @@ Physical alt does not send an actual Alt key, but remaps the output scancodes to
 I have not yet updated any other part of the Readme file.
 
 ## Install tools
+
 Pico SDK requires gcc-arm-none-eabi, so install required tools:
 
     sudo apt install cmake gcc-arm-none-eabi libnewlib-arm-none-eabi libstdc++-arm-none-eabi-newlib
