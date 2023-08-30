@@ -29,6 +29,10 @@ Physical alt does not send an actual Alt key, but remaps the output scancodes to
 
 I have not yet updated any other part of the Readme file.
 
+## Install tools
+
+    sudo apt install cmake gcc-arm-none-eabi libnewlib-arm-none-eabi libstdc++-arm-none-eabi-newlib
+
 ## Checkout
 
 The code depends on the Raspberry Pi Pico SDK, which is added as a submodule. Because the Pico SDK includes TinyUSB as a module, it is not recommended to do a recursive submodule init, and rather follow these steps:
